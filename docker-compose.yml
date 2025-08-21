@@ -1,0 +1,47 @@
+# Docker Compose for local PostgreSQL development
+# This provides a local PostgreSQL instance for Phase 4 development and testing
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: tpl-spring-boot-postgres
+    environment:
+      POSTGRES_DB: tpl_spring_boot
+      POSTGRES_USER: tpl_user
+      POSTGRES_PASSWORD: tpl_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tpl_user -d tpl_spring_boot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: tpl-spring-boot-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    profiles:
+      - pgadmin
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: tpl-spring-boot-network

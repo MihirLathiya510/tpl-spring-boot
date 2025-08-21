@@ -1,0 +1,131 @@
+Alright — here's the **final polished roadmap** for creating your professional-grade **`tpl-spring-boot`** template.
+This version consolidates best practices, Remit2Any's SOW requirements, and industry standards.
+
+---
+
+# 🚀 Final Roadmap: `tpl-spring-boot`
+
+---
+
+## **Phase 1: Foundation (Scaffolding)**
+
+**Goal:** Generate the base project skeleton.
+
+* Use **Spring Initializr** (with Maven)
+
+  * Dependencies: `web`, `data-jpa`, `postgresql`, `security`, `validation`, `lombok`, `actuator`, `springdoc-openapi`.
+  * Java 17+ LTS.
+* Initialize **Git repository** (`.gitignore`, `README.md`).
+* Standard **Maven layout** (`src/main/java`, `src/main/resources`, `src/test/java`).
+* Create package structure:
+
+  ```
+  controller/   # REST endpoints
+  service/      # Business logic
+  repository/   # DB access
+  config/       # Security, multi-tenancy, observability
+  dto/          # Request/response models
+  exception/    # Global exception handling
+  util/         # Helpers
+  ```
+
+---
+
+## **Phase 2: Core Standards**
+
+**Goal:** Define API standards & maintain consistency.
+
+* **OpenAPI 3.0 (Swagger UI)** → `/swagger-ui.html`.
+* **Global Exception Handling** via `@ControllerAdvice`.
+* **ErrorResponse DTO** with timestamp, code, message, traceId.
+* **Validation** on DTOs with `javax.validation`.
+* **Structured Logging** (JSON logback config).
+
+---
+
+## **Phase 3: Security & Multi-Tenancy**
+
+**Goal:** Enterprise-ready auth & tenant handling.
+
+* **Spring Security + JWT** (AWS Cognito ready).
+* **Tenant Resolver** → Schema-based or discriminator-based strategy.
+* **TenantContextHolder** for per-request tenant context.
+* **AWS Secrets Manager placeholders** for sensitive configs.
+
+---
+
+## **Phase 4: Database & Persistence**
+
+**Goal:** Scalable DB design and migrations.
+
+* **Spring Data JPA** with PostgreSQL.
+* **Flyway migrations** under `resources/db/migration`.
+* **BaseEntity** with audit fields (createdAt, updatedAt).
+* **Testcontainers** for PostgreSQL integration tests.
+
+---
+
+## **Phase 5: Observability**
+
+**Goal:** Monitoring, metrics, and debugging in production.
+
+* **Spring Boot Actuator** endpoints (`/actuator/health`, `/metrics`).
+* **Micrometer** integration → AWS CloudWatch.
+* **OpenTelemetry tracing** (trace ID in logs).
+* **Correlation ID filter** for request tracing.
+
+---
+
+## **Phase 6: CI/CD & DevOps**
+
+**Goal:** Enable automation and deployment readiness.
+
+* **Dockerfile** (multi-stage build → optimized runtime).
+* `.dockerignore`.
+* **GitHub Actions / GitLab CI / AWS CodePipeline**:
+
+  * Steps: Build → Test → Coverage → Sonar → Docker build → Push → Deploy.
+* Config placeholders for **AWS ECS/Lambda + API Gateway**.
+
+---
+
+## **Phase 7: Developer Experience (DX)**
+
+**Goal:** Fast onboarding for developers & partners.
+
+* **README.md** with setup guide, API usage, profiles.
+* **Postman collection** auto-generated from OpenAPI (`/postman/api-collection.json`).
+* **SDK stubs** using OpenAPI Generator.
+* **Sample API tests** in Postman/RestAssured.
+
+---
+
+## **Phase 8: Quality Gates**
+
+**Goal:** Maintain long-term sustainability & reliability.
+
+* **Static analysis**: Checkstyle, SpotBugs, PMD.
+* **Code coverage**: Jacoco + SonarQube.
+* **Pre-commit hooks** for formatting & linting.
+* **Conventional commits** for consistent history.
+
+---
+
+# 🎯 End Deliverable
+
+A **production-ready Spring Boot template** that is:
+
+* Cloneable → run instantly.
+* Built with **Maven** (enterprise standard, but Gradle option possible).
+* Implements **modern API practices** (OpenAPI, versioning, error handling).
+* Ready for **multi-tenancy, observability, security**.
+* Bundled with **CI/CD & DevOps hooks**.
+* Provides a **great developer experience** (docs, Postman, SDK).
+
+---
+
+✅ With this roadmap, `tpl-spring-boot` isn't just a starter — it's a **professional baseline** for fintech-grade, enterprise-grade Spring Boot APIs like Remit2Any.
+
+---
+
+Do you want me to **turn this roadmap into an actual generated `tpl-spring-boot` project (with Maven pom.xml + starter classes + configs)** so you can directly clone and use it?
