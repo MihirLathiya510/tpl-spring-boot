@@ -1,6 +1,6 @@
--- Migration: Create users table with PostgreSQL Row-Level Security (RLS)
--- This implements the Pool Model for multi-tenancy where all tenants share the same schema
--- but data is isolated using PostgreSQL's Row-Level Security feature.
+-- Migration: Create users and user_roles tables with multi-tenancy support
+-- Author: Spring Boot Template
+-- Date: 2025-08-21
 
 -- Create users table
 CREATE TABLE users (
@@ -9,6 +9,7 @@ CREATE TABLE users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL,
     age INTEGER,
+    phone_number VARCHAR(20),
     password VARCHAR(255) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -18,7 +19,7 @@ CREATE TABLE users (
     CONSTRAINT uk_users_email_tenant UNIQUE (email, tenant_id)
 );
 
--- Create user_roles table for role management
+-- Create user_roles table
 CREATE TABLE user_roles (
     user_id BIGINT NOT NULL,
     role VARCHAR(50) NOT NULL,
@@ -30,30 +31,25 @@ CREATE TABLE user_roles (
     CONSTRAINT uk_user_roles_user_role UNIQUE (user_id, role)
 );
 
--- Create indexes for performance optimization
+-- Create indexes for performance
 CREATE INDEX idx_users_tenant_id ON users(tenant_id);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_created_at ON users(created_at);
 CREATE INDEX idx_user_roles_user_id ON user_roles(user_id);
 
--- Enable Row-Level Security on users table (forced for superusers)
+-- Enable Row-Level Security
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users FORCE ROW LEVEL SECURITY;
 
--- Create RLS policy for users table
--- This policy ensures that users can only access data for their current tenant
+ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_roles FORCE ROW LEVEL SECURITY;
+
+-- Create RLS policies
 CREATE POLICY tenant_isolation_policy ON users
     FOR ALL
     TO PUBLIC
     USING (tenant_id = current_setting('app.current_tenant', true));
 
--- Enable Row-Level Security on user_roles table (forced for superusers)
-ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_roles FORCE ROW LEVEL SECURITY;
-
--- Create RLS policy for user_roles table
--- This policy ensures that user roles are also tenant-isolated
--- It joins with the users table to inherit the tenant context
 CREATE POLICY tenant_isolation_policy ON user_roles
     FOR ALL
     TO PUBLIC
@@ -65,8 +61,7 @@ CREATE POLICY tenant_isolation_policy ON user_roles
         )
     );
 
--- Create function to set current tenant
--- This function will be called by our application to set the tenant context
+-- Create tenant management functions
 CREATE OR REPLACE FUNCTION set_current_tenant(tenant_id TEXT)
 RETURNS void AS $$
 BEGIN
@@ -74,8 +69,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create function to get current tenant
--- This function can be used in queries to get the current tenant
 CREATE OR REPLACE FUNCTION get_current_tenant()
 RETURNS TEXT AS $$
 BEGIN
@@ -84,7 +77,6 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create updated_at trigger function
--- This function automatically updates the updated_at column on row updates
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -99,30 +91,10 @@ CREATE TRIGGER update_users_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Grant necessary permissions
--- These grants ensure that the application can perform all necessary operations
+-- Grant permissions
 GRANT USAGE ON SCHEMA public TO PUBLIC;
 GRANT SELECT, INSERT, UPDATE, DELETE ON users TO PUBLIC;
 GRANT SELECT, INSERT, UPDATE, DELETE ON user_roles TO PUBLIC;
 GRANT USAGE, SELECT ON SEQUENCE users_id_seq TO PUBLIC;
 GRANT EXECUTE ON FUNCTION set_current_tenant(TEXT) TO PUBLIC;
 GRANT EXECUTE ON FUNCTION get_current_tenant() TO PUBLIC;
-
--- Insert sample data for testing (will be removed in production)
--- This data helps verify that RLS is working correctly
-INSERT INTO users (tenant_id, name, email, age, password, enabled) VALUES
-('tenant1', 'John Doe', 'john@tenant1.com', 25, '$2a$12$dummy.hash.for.testing', true),
-('tenant2', 'Jane Smith', 'jane@tenant2.com', 30, '$2a$12$dummy.hash.for.testing', true);
-
-INSERT INTO user_roles (user_id, role) VALUES
-(1, 'USER'),
-(1, 'ADMIN'),
-(2, 'USER');
-
--- Add comments for documentation
-COMMENT ON TABLE users IS 'Users table with multi-tenant support using PostgreSQL RLS';
-COMMENT ON TABLE user_roles IS 'User roles table with tenant isolation via RLS';
-COMMENT ON FUNCTION set_current_tenant(TEXT) IS 'Sets the current tenant context for RLS policies';
-COMMENT ON FUNCTION get_current_tenant() IS 'Gets the current tenant context';
-COMMENT ON POLICY tenant_isolation_policy ON users IS 'RLS policy ensuring tenant data isolation';
-COMMENT ON POLICY tenant_isolation_policy ON user_roles IS 'RLS policy ensuring user roles are tenant-isolated';
