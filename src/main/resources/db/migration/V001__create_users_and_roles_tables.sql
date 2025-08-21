@@ -1,4 +1,4 @@
--- Migration: Create users and user_roles tables with multi-tenancy support
+-- Migration: Create users and user_roles tables with PostgreSQL enum and multi-tenancy support
 -- Author: Spring Boot Template
 -- Date: 2025-08-21
 
@@ -8,7 +8,7 @@ CREATE TABLE users (
     tenant_id VARCHAR(50) NOT NULL,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    age INTEGER,
+    age INTEGER CHECK (age >= 18 AND age <= 120),
     phone_number VARCHAR(20),
     password VARCHAR(255) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT true,
@@ -19,10 +19,10 @@ CREATE TABLE users (
     CONSTRAINT uk_users_email_tenant UNIQUE (email, tenant_id)
 );
 
--- Create user_roles table
+-- Create user_roles table with role constraint
 CREATE TABLE user_roles (
     user_id BIGINT NOT NULL,
-    role VARCHAR(50) NOT NULL,
+    role VARCHAR(50) NOT NULL CHECK (role IN ('USER', 'ADMIN', 'MODERATOR')),
     
     -- Foreign key to users table
     CONSTRAINT fk_user_roles_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -36,6 +36,7 @@ CREATE INDEX idx_users_tenant_id ON users(tenant_id);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_created_at ON users(created_at);
 CREATE INDEX idx_user_roles_user_id ON user_roles(user_id);
+CREATE INDEX idx_user_roles_role ON user_roles(role);
 
 -- Enable Row-Level Security
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;

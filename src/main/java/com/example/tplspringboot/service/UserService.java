@@ -40,36 +40,7 @@ public class UserService {
      * 
      * @param name the user's name
      * @param email the user's email (must be unique within tenant)
-     * @param password the user's plain text password
-     * @return the created user
-     * @throws ConflictException if email already exists within the current tenant
-     */
-    public User createUser(String name, String email, String password) {
-        // Check if user already exists (RLS automatically filters by tenant)
-        if (userRepository.existsByEmail(email)) {
-            throw new ConflictException("User", email);
-        }
-        
-        // Encrypt password
-        String encryptedPassword = passwordEncoder.encode(password);
-        
-        // Create user entity (tenant_id will be set automatically by BaseEntity)
-        User user = User.createNew(name, email, encryptedPassword);
-        
-        // Save user (RLS ensures it's saved to current tenant)
-        User savedUser = userRepository.save(user);
-        
-        log.info("Created new user '{}' with ID {}", email, savedUser.getId());
-        return savedUser;
-    }
-    
-    /**
-     * Creates a new user account with age within the current tenant context.
-     * PostgreSQL RLS automatically handles tenant isolation.
-     * 
-     * @param name the user's name
-     * @param email the user's email (must be unique within tenant)
-     * @param age the user's age
+     * @param age the user's age (can be null)
      * @param password the user's plain text password
      * @return the created user
      * @throws ConflictException if email already exists within the current tenant
@@ -95,7 +66,7 @@ public class UserService {
     
     /**
      * Finds a user by email within the current tenant context.
-     * PostgreSQL RLS automatically filters by tenant.
+     * Uses explicit tenant filtering for reliable isolation.
      * 
      * @param email the user's email
      * @return the user if found
@@ -103,24 +74,27 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
+        String currentTenant = com.example.tplspringboot.tenant.TenantContext.getCurrentTenant();
+        return userRepository.findByEmailAndTenantId(email, currentTenant)
                 .orElseThrow(() -> new ResourceNotFoundException("User", email));
     }
     
     /**
      * Finds a user by email within the current tenant context, returning Optional.
+     * Uses explicit tenant filtering for reliable isolation.
      * 
      * @param email the user's email
-     * @return Optional containing the user if found
+     * @return Optional containing the user if found in current tenant
      */
     @Transactional(readOnly = true)
     public Optional<User> findByEmailOptional(String email) {
-        return userRepository.findByEmail(email);
+        String currentTenant = com.example.tplspringboot.tenant.TenantContext.getCurrentTenant();
+        return userRepository.findByEmailAndTenantId(email, currentTenant);
     }
     
     /**
      * Authenticates a user by email and password within the current tenant context.
-     * PostgreSQL RLS automatically handles tenant isolation.
+     * Uses explicit tenant filtering for reliable isolation.
      * 
      * @param email the user's email
      * @param password the user's plain text password
@@ -129,11 +103,12 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public User authenticate(String email, String password) {
-        // Use Optional to avoid throwing ResourceNotFoundException for non-existent users
-        Optional<User> userOptional = userRepository.findByEmail(email);
+        // Use Optional with explicit tenant filtering to avoid throwing ResourceNotFoundException for non-existent users
+        String currentTenant = com.example.tplspringboot.tenant.TenantContext.getCurrentTenant();
+        Optional<User> userOptional = userRepository.findByEmailAndTenantId(email, currentTenant);
         
         if (userOptional.isEmpty()) {
-            log.warn("Authentication failed for user '{}': user not found", email);
+            log.warn("Authentication failed for user '{}': user not found in tenant '{}'", email, currentTenant);
             throw AuthenticationException.invalidCredentials();
         }
         
@@ -149,7 +124,7 @@ public class UserService {
             throw AuthenticationException.invalidCredentials();
         }
         
-        log.debug("Successfully authenticated user '{}' with ID {}", email, user.getId());
+        log.debug("Successfully authenticated user '{}' with ID {} in tenant '{}'", email, user.getId(), currentTenant);
         return user;
     }
     
@@ -179,14 +154,16 @@ public class UserService {
     
     /**
      * Finds a user by ID within the current tenant context.
+     * Uses explicit tenant filtering for reliable isolation.
      * 
      * @param id the user ID
      * @return the user if found
-     * @throws ResourceNotFoundException if user not found
+     * @throws ResourceNotFoundException if user not found in current tenant
      */
     @Transactional(readOnly = true)
     public User findById(Long id) {
-        return userRepository.findById(id)
+        String currentTenant = com.example.tplspringboot.tenant.TenantContext.getCurrentTenant();
+        return userRepository.findByIdAndTenantId(id, currentTenant)
                 .orElseThrow(() -> new ResourceNotFoundException("User", id.toString()));
     }
     

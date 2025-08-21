@@ -103,27 +103,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allow specific origins (configure based on your frontend domains)
-        configuration.setAllowedOriginPatterns(List.of(
-            "http://localhost:*",
-            "https://*.enterprise.com",
-            "https://*.staging.enterprise.com"
-        ));
+        // Allow all origins for development (restrict in production)
+        configuration.setAllowedOriginPatterns(List.of("*"));
         
         // Allow specific HTTP methods
         configuration.setAllowedMethods(Arrays.asList(
             "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
         ));
         
-        // Allow specific headers
-        configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization",
-            "Content-Type",
-            "X-Tenant-ID",
-            "X-Request-ID",
-            "Accept",
-            "Origin"
-        ));
+        // Allow all headers for development
+        configuration.setAllowedHeaders(List.of("*"));
         
         // Expose specific headers to the client
         configuration.setExposedHeaders(Arrays.asList(

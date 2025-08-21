@@ -150,4 +150,26 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u WHERE u.tenantId = :tenantId")
     Page<User> findAllByTenantId(@Param("tenantId") String tenantId, Pageable pageable);
+    
+    /**
+     * Explicit tenant-aware query to find a user by ID and tenant ID.
+     * This ensures proper tenant isolation for individual user lookups.
+     * 
+     * @param id the user ID
+     * @param tenantId the tenant ID to filter by
+     * @return Optional containing the user if found within the specified tenant
+     */
+    @Query("SELECT u FROM User u WHERE u.id = :id AND u.tenantId = :tenantId")
+    Optional<User> findByIdAndTenantId(@Param("id") Long id, @Param("tenantId") String tenantId);
+    
+    /**
+     * Explicit tenant-aware query to find a user by email and tenant ID.
+     * This ensures proper tenant isolation for email-based lookups.
+     * 
+     * @param email the user's email address
+     * @param tenantId the tenant ID to filter by
+     * @return Optional containing the user if found within the specified tenant
+     */
+    @Query("SELECT u FROM User u WHERE u.email = :email AND u.tenantId = :tenantId")
+    Optional<User> findByEmailAndTenantId(@Param("email") String email, @Param("tenantId") String tenantId);
 }

@@ -89,7 +89,7 @@ db-info:
 
 db-clean:
 	@echo "Cleaning database..."
-	mvn flyway:clean -Dflyway.url=jdbc:postgresql://localhost:5432/tpl_spring_boot -Dflyway.user=tpl_user -Dflyway.password=tpl_password
+	mvn flyway:clean -Dflyway.url=jdbc:postgresql://localhost:5432/tpl_spring_boot -Dflyway.user=tpl_user -Dflyway.password=tpl_password -Dflyway.cleanDisabled=false
 
 db-reset: db-clean db-migrate
 	@echo "Database reset completed!"

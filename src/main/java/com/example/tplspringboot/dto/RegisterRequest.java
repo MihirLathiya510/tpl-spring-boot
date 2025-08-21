@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +30,11 @@ public class RegisterRequest {
     @Email(message = "Email must be valid")
     @Schema(description = "User's email address", example = "john.doe@tenant1.com", requiredMode = Schema.RequiredMode.REQUIRED)
     private String email;
+
+    @Min(value = 18, message = "Age must be at least 18")
+    @Max(value = 120, message = "Age must not exceed 120")
+    @Schema(description = "User's age", example = "25", minimum = "18", maximum = "120")
+    private Integer age;
 
     @NotBlank(message = "Password is required")
     @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")

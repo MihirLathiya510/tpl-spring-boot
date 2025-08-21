@@ -91,6 +91,7 @@ public class AuthController {
         User user = userService.createUser(
                 request.getName(),
                 request.getEmail(),
+                request.getAge(),
                 request.getPassword()
         );
         
